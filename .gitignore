@@ -1,0 +1,12 @@
+# Security
+.env
+secrets.toml
+
+# Environment
+__pycache__/
+.venv/
+venv/
+
+# Memory 
+chroma/
+*.db
