@@ -28,7 +28,7 @@ Your goal is to assist in the precision management of inventory through determin
 class InventoryAgent:
     def __init__(self, tools, system_prompt):
         self.llm = ChatGoogleGenerativeAI(
-            model="gemini-1.5-flash",
+            model="gemini-2.5-flash",
             temperature=0.1,  # Lower temperature for precision over probability 
             google_api_key=os.getenv("GOOGLE_API_KEY")
         )

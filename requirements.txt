@@ -1,19 +1,17 @@
 # List of dependencies for deployment
+# CS- I was encountering an error with versions, so I had to manually set them :)
 
-# Orchestration
-langchain>=0.1.0
-langchain-google-genai
-google-generativeai
-langchain-community
-langchainhub
+# Core AI Stack (Pinned to 0.3.0 stability)
+langchain==0.3.0
+langchain-community==0.3.0
+langchain-core==0.3.63
+langchain-google-genai==2.1.5
 
-# Interface & Data
-streamlit
-pandas
-python-dotenv
+# Data & UI Stack (Pinned to avoid the NumPy 2.0 crash)
+numpy>=1.26.4,<2.0.0
+pandas>=2.2.0,<3.0.0
+streamlit>=1.32.0
 
-# RAG & Memory: Might need to change these
-sqlalchemy
-
-# Testing
-pytest
+# Supporting Utilities
+pydantic>=2.0.0,<3.0.0
+python-dotenv>=1.0.0
