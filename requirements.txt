@@ -1,1 +1,18 @@
 # List of dependencies for deployment
+
+# Orchestration
+langchain
+langchain-google-genai
+google-generativeai
+
+# Interface & Data
+streamlit
+pandas
+python-dotenv
+
+# RAG & Memory: Might need to change these
+chromadb
+pypdf
+
+# Testing
+pytest
