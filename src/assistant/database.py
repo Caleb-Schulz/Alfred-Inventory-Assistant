@@ -1,1 +1,0 @@
-# Vector DB (Chroma/Pinecone) setup
