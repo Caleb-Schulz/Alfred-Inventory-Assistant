@@ -1,10 +1,11 @@
 # List of dependencies for deployment
 
 # Orchestration
-langchain
+langchain>=0.1.0
 langchain-google-genai
 google-generativeai
 langchain-community
+langchainhub
 
 # Interface & Data
 streamlit
@@ -12,8 +13,7 @@ pandas
 python-dotenv
 
 # RAG & Memory: Might need to change these
-chromadb
-pypdf
+sqlalchemy
 
 # Testing
 pytest

@@ -64,10 +64,13 @@ class InventoryAgent:
         if not inventory_context:
             inventory_context = "No inventory file has been uploaded yet. Please ask the user to upload a CSV."
         
+        #It will only remember the last 10 lines
+        formatted_history = "\n".join([f"{msg.type}: {msg.content}" for msg in chat_history[-10:]])
+
         # Formats the input with the history and current data
         full_input = (
             f"{self.system_prompt}\n\n"
-            f"PREVIOUS CONVERSATION:\n{chat_history[-10:]}\n\n" #It will only remember the last 10 lines
+            f"PREVIOUS CONVERSATION:\n{formatted_history}\n\n" 
             f"CURRENT INVENTORY:\n{inventory_context}\n\n"
             f"USER REQUEST: {user_input}"
         )
