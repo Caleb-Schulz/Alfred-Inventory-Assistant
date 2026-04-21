@@ -6,7 +6,9 @@ secrets.toml
 __pycache__/
 .venv/
 venv/
+.DS_Store
 
-# Memory 
-chroma/
+# Memory & Data
 *.db
+data/memory.db
+data/uploads/
