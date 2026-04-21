@@ -1,0 +1,7 @@
+Item Name,Stock ,Min Stock,Daily Demand,Lead Time,Supplier,Category
+Milk,10,15,4,2,DairyBest,dairy
+ Eggs, 30,12,6,3,FarmFresh,DAIRY
+Tomatoes,,20,5,2,FreshCo,produce
+tomatoes,8,20,5,2,FreshCo, Produce
+Bread,5,,2,1,BakeHouse,bakery
+Rice,50,25,3,5,,pantry
