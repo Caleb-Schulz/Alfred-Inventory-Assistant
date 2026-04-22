@@ -1,4 +1,5 @@
 import os
+import streamlit as st
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.agents import create_react_agent, AgentExecutor
@@ -6,8 +7,15 @@ from langchain import hub
 from langchain_community.chat_message_histories import SQLChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
 
-# Load security environment variables
+# Try to load local .env
 load_dotenv()
+
+# Get key from environment OR streamlit secrets
+# Will put API key in Streamlit "Secrets" for deployment
+api_key = os.getenv("GOOGLE_API_KEY") or st.secrets.get("GOOGLE_API_KEY")
+
+if not api_key:
+    st.error("No API Key found. Please configure the environment.")
 
 SYSTEM_PROMPT = f"""
 You are a professional supply chain and inventory specialist named "Alfred".
