@@ -1,6 +1,6 @@
 # parser.py
 import pandas as pd
-from cleaner import standardize_column_names, clean_missing_values, normalize_text_fields
+from cleaner import standardize_column_names, clean_missing_values, normalize_text_fields, remove_duplicates
 from validator import validate_required_columns, validate_numeric_columns, flag_negative_values
 from exporter import export_clean_inventory_csv
 
@@ -11,6 +11,7 @@ def read_inventory_csv(file_path: str) -> pd.DataFrame:
     validate_required_columns(df)
     df = clean_missing_values(df)
     df = normalize_text_fields(df)
+    df = remove_duplicates(df)
     validate_numeric_columns(df)
     df = flag_negative_values(df)
     return df

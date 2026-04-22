@@ -49,3 +49,8 @@ def normalize_text_fields(df: pd.DataFrame) -> pd.DataFrame:
         df["item_name"] = df["item_name"].str.title()
 
     return df
+
+# removes duplicate inventory rows
+def remove_duplicates(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.drop_duplicates()
+    return df
