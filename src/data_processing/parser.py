@@ -2,6 +2,7 @@
 import pandas as pd
 from cleaner import standardize_column_names, clean_missing_values, normalize_text_fields
 from validator import validate_required_columns, validate_numeric_columns, flag_negative_values
+from exporter import export_clean_inventory_csv
 
 # Reads the inventory csv file and returns it as a dataframe
 def read_inventory_csv(file_path: str) -> pd.DataFrame:
@@ -17,5 +18,6 @@ def read_inventory_csv(file_path: str) -> pd.DataFrame:
 # tests the parser with a sample csv
 if __name__ == "__main__":
     df = read_inventory_csv("data/sample_inventory_messy.csv")
-    print(df.head())
-    print(df.columns)
+    print(df)
+    print("\nColumns:")
+    print(df.columns.tolist())
