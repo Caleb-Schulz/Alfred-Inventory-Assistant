@@ -33,3 +33,19 @@ def clean_missing_values(df: pd.DataFrame) -> pd.DataFrame:
         df["supplier"] = df["supplier"].fillna("unknown")
 
     return df
+
+# standardize and clean the text fields so the values are more consistent
+def normalize_text_fields(df: pd.DataFrame) -> pd.DataFrame:
+    text_columns = ["item_name", "supplier", "category"]
+
+    for col in text_columns:
+        if col in df.columns:
+            df[col] = df[col].astype(str).str.strip()
+
+    if "category" in df.columns:
+        df["category"] = df["category"].str.lower()
+
+    if "item_name" in df.columns:
+        df["item_name"] = df["item_name"].str.title()
+
+    return df

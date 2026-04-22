@@ -1,12 +1,13 @@
 # parser.py
 import pandas as pd
-from cleaner import standardize_column_names, clean_missing_values
+from cleaner import standardize_column_names, clean_missing_values, normalize_text_fields
 
 # Reads the inventory csv file and returns it as a dataframe
 def read_inventory_csv(file_path: str) -> pd.DataFrame:
     df = pd.read_csv(file_path)
     df = standardize_column_names(df)
     df = clean_missing_values(df)
+    df = normalize_text_fields(df)
     return df
 
 # tests the parser with a sample csv
