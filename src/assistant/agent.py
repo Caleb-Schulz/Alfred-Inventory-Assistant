@@ -44,7 +44,7 @@ class InventoryAgent:
         self.llm = ChatGoogleGenerativeAI(
             model="gemini-2.5-flash",
             temperature=0.1,  # Lower temperature for precision over probability 
-            google_api_key=os.getenv("GOOGLE_API_KEY")
+            google_api_key=api_key
         )
         self.tools = tools
         self.system_prompt = system_prompt

@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import os
 from src.assistant.agent import InventoryAgent, SYSTEM_PROMPT
+from src.data_processing.parser import read_inventory_csv
 # from src.assistant.tools import tools_names and add them later
 
 
@@ -49,8 +50,10 @@ uploaded_file = st.file_uploader("Upload Inventory CSV", type="csv")
 inventory_context = "No file uploaded" # Default
 
 if uploaded_file:
-    df = pd.read_csv(uploaded_file)
-    st.dataframe(df, use_container_width=True) # Show the data on screen
+    df, summary = read_inventory_csv(uploaded_file)
+    st.dataframe(df, use_container_width=True)  # Show the data on screen
+    
+    st.write("Summary:", summary)
     
     # Update the context for Agent
     inventory_context = df.head(50).to_string() 
