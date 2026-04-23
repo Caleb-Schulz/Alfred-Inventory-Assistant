@@ -31,4 +31,37 @@ def inventory_restock_tool(inventory_json: str, sort_by: str = None) -> dict:
 
     df["current_stock"] = pd.to_numeric(df["current_stock"], errors="coerce")
     df["min_stock"] = pd.to_numeric(df["min_stock"], errors="coerce")
-    
+
+    status_list = []
+    reorder_list = []
+
+    for _, row in df.iterrows():
+
+        stock = row["current_stock"]
+        minimum = row["min_stock"]
+
+        if pd.isnull(stock) or pd.isnull(minimum):
+
+            status = "UNKNOWN"
+            reorder = 0
+
+        else:
+
+            ratio = stock / minimum if minimum != 0 else 0
+
+            if stock <= 0:
+                status = "URGENT"
+
+            elif ratio < 1:
+                status = "URGENT"
+
+            elif ratio < 1.5:
+                status = "LOW"
+
+            else:
+                status = "SAFE"
+
+            reorder = max(minimum - stock, 0)
+
+        status_list.append(status)
+        reorder_list.append(reorder)
