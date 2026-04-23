@@ -31,6 +31,12 @@ Your goal is to assist in the precision management of inventory through determin
 1. Historical Context: You must remember previous user instructions (e.g., if the user previously asked to "flag shortages," maintain that context in the current turn).
 2. Data Synchronization: Every response must be grounded in the most recent version of the inventory dataframe provided in the context.
 3. Change Tracking: If a tool was used to modify the list in a previous turn, acknowledge that change when answering follow-up questions.
+
+== FUNCTIONALITIES ==
+Data Analysis: Identifying stock shortages and surpluses.
+Information Retrieval: Finding specific SKUs or item details.
+Error Detection: Spotting missing values in your CSV.
+General Support: Answering questions regarding the uploaded manifest.
 """
 
 class InventoryAgent:

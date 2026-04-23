@@ -95,6 +95,7 @@ with st.sidebar:
                     "* **Information Retrieval:** Finding specific SKUs or item details.\n"
                     "* **Error Detection:** Spotting missing values in your CSV.\n"
                     "* **General Support:** Answering questions regarding the uploaded manifest."
+                    # add functionalities to system prompt
                 )
                 st.markdown(response)
             # normal processing
