@@ -1,4 +1,6 @@
 #Making a tool that would allow the agent to add any data to any column
+import pandas as pd
+from Langchain.tools import tool 
 @tool("add_data_to_column", return_direct=True)
 
 def add_data_to_column(df: pd.DataFrame, column_name: str, data) -> pd.DataFrame:
