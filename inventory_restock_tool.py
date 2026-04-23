@@ -65,3 +65,15 @@ def inventory_restock_tool(inventory_json: str, sort_by: str = None) -> dict:
 
         status_list.append(status)
         reorder_list.append(reorder)
+
+    df["status"] = status_list
+    df["reorder_qty"] = reorder_list
+
+    if sort_by and sort_by in df.columns:
+        df = df.sort_values(by=sort_by)
+
+    summary = {
+        "urgent": int((df["status"] == "URGENT").sum()),
+        "low": int((df["status"] == "LOW").sum()),
+        "safe": int((df["status"] == "SAFE").sum())
+    }
