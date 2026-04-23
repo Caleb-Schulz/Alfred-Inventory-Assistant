@@ -77,3 +77,9 @@ def inventory_restock_tool(inventory_json: str, sort_by: str = None) -> dict:
         "low": int((df["status"] == "LOW").sum()),
         "safe": int((df["status"] == "SAFE").sum())
     }
+
+    return {
+        "result": df.to_json(orient="records"),
+        "unit": "inventory_status",
+        "detail": summary
+    }
