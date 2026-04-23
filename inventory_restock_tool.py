@@ -28,3 +28,7 @@ def inventory_restock_tool(inventory_json: str, sort_by: str = None) -> dict:
         raise ValueError(
             f"Missing required columns: {required_cols}"
         )
+
+    df["current_stock"] = pd.to_numeric(df["current_stock"], errors="coerce")
+    df["min_stock"] = pd.to_numeric(df["min_stock"], errors="coerce")
+    
