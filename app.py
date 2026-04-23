@@ -44,22 +44,61 @@ if not st.session_state.user_name:
 
 # --- Main Dashboard ---
 
+# Initialize dfs
+if "original_df" not in st.session_state:
+    st.session_state.original_df = None
+if "current_df" not in st.session_state:
+    st.session_state.current_df = None
+
 # CSV Uploader
 uploaded_file = st.file_uploader("Upload Inventory CSV", type="csv")
 inventory_context = "No file uploaded" # Default
 
 if uploaded_file:
-    df = pd.read_csv(uploaded_file)
-    st.dataframe(df, use_container_width=True) # Show the data on screen
-    
-    # Update the context for Agent
-    inventory_context = df.head(50).to_string() 
+    # checks if new file
+    is_new_file = st.session_state.get("last_uploaded") != uploaded_file.name
+    new_df = pd.read_csv(uploaded_file)
 
-    # Send a message for upload
-    if "file_processed" not in st.session_state or st.session_state.get("last_uploaded") != uploaded_file.name:
-        st.session_state.messages.append({"role": "assistant", "content": f"Thank you for uploading '{uploaded_file.name}'. Let me know if you have any questions about the inventory. Type **/help** for a full list of my functionalities."})
-        st.session_state.file_processed = True
+    if is_new_file:
+        st.session_state.original_df = new_df.copy()
+        st.session_state.current_df = new_df
         st.session_state.last_uploaded = uploaded_file.name
+
+        # new file Upload Message
+        upload_msg = f"Thank you for uploading '{uploaded_file.name}'. Let me know if you have any questions about the inventory. Type **/help** for a full list of my functionalities."
+        st.session_state.messages.append({"role": "assistant", "content": upload_msg})  
+
+    # allows agent to see table
+    inventory_context = st.session_state.current_df.head(50).to_string()
+
+    # --- Display Tables ---
+    
+    # 1. Display original Data only if diffrent
+    if st.session_state.original_df is not None and not st.session_state.original_df.equals(st.session_state.current_df):
+        st.subheader("Original Inventory Manifest (Reference)")
+        st.dataframe(st.session_state.original_df, width="stretch")
+        st.divider()
+
+    # 2. Display Current Data
+    st.subheader("Current Inventory Manifest")
+    st.dataframe(st.session_state.current_df, width="stretch")
+
+    # --- EXPORT SECTION ---
+    # Convert dataframe to CSV for downloading
+    csv_data = st.session_state.current_df.to_csv(index=False).encode('utf-8')
+    
+    btn = st.download_button(
+        label="Export Current Inventory to CSV",
+        data=csv_data,
+        file_name=f"alfred_exported_{uploaded_file.name}",
+        mime="text/csv",
+    )
+
+    # send export massage
+    if btn:
+        export_msg = f"Export successful, Thank you for using Alfred inventory assistant. Let me know if there is anything else I can help you with."
+        st.session_state.messages.append({"role": "assistant", "content": export_msg})
+        st.rerun()
 
 # --- Side bar chat interface ---
 with st.sidebar:
