@@ -1,4 +1,4 @@
-# Alfred Inventory-Assistant\
+# Alfred Inventory-Assistant
 To Run\
 add .env with you API key\
 pip install -r requirements.txt\
