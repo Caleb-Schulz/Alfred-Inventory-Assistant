@@ -1,4 +1,5 @@
 # app.py
+import pandas as pd
 import streamlit as st
 from src.assistant.agent import InventoryAgent, SYSTEM_PROMPT
 from src.tools.inventory_restock_tool import inventory_restock_tool
@@ -150,12 +151,28 @@ with st.sidebar:
                 st.markdown(response)
             # normal processing
             else:
-                response = st.session_state.agent_executor.run(
+                agent_result = st.session_state.agent_executor.run(
                     user_input=prompt,
                     inventory_context=inventory_context,
                     inventory_json=st.session_state.get("inventory_json", "[]"),
                     user_name=st.session_state.user_name
                 )
+
+                response = agent_result["output"]
+
+                if "intermediate_steps" in agent_result:
+                    for step in agent_result["intermediate_steps"]:
+                        action, observation = step
+
+                        if isinstance(observation, dict) and observation.get("unit") == "inventory_update":
+                            updated_json = observation.get("result")
+
+                            if updated_json:
+                                st.session_state.inventory_json = updated_json
+                                st.session_state.current_df = pd.read_json(updated_json, orient="records")
+                                inventory_context = st.session_state.current_df.head(50).to_string()
+                                st.rerun()
+
                 st.markdown(response)
 
         st.session_state.messages.append({"role": "assistant", "content": response})

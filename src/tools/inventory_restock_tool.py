@@ -1,10 +1,13 @@
 # inventory_restock_tool.py
 from langchain.tools import tool
 import pandas as pd
+import streamlit as st
+import json
+from io import StringIO
 
 
 @tool
-def inventory_restock_tool(inventory_json: str, sort_by: str = None) -> dict:
+def inventory_restock_tool(inventory_json: str = "", sort_by: str = None) -> dict:
     """
     Determines inventory restock urgency using deterministic rules.
 
@@ -21,14 +24,21 @@ def inventory_restock_tool(inventory_json: str, sort_by: str = None) -> dict:
         dict containing updated inventory + summary
     """
 
-    df = pd.read_json(inventory_json, orient="records")
+    # fallback to session state if tool input is missing or bad
+    if not inventory_json or not str(inventory_json).strip():
+        inventory_json = st.session_state.get("inventory_json", "[]")
+
+    try:
+        json.loads(inventory_json)
+    except Exception:
+        inventory_json = st.session_state.get("inventory_json", "[]")
+
+    df = pd.read_json(StringIO(inventory_json), orient="records")
 
     required_cols = ["item_name", "current_stock", "min_stock"]
 
     if not all(col in df.columns for col in required_cols):
-        raise ValueError(
-            f"Missing required columns: {required_cols}"
-        )
+        raise ValueError(f"Missing required columns: {required_cols}")
 
     df["current_stock"] = pd.to_numeric(df["current_stock"], errors="coerce")
     df["min_stock"] = pd.to_numeric(df["min_stock"], errors="coerce")
@@ -37,33 +47,26 @@ def inventory_restock_tool(inventory_json: str, sort_by: str = None) -> dict:
     reorder_list = []
 
     for _, row in df.iterrows():
-
         stock = row["current_stock"]
         minimum = row["min_stock"]
 
         if pd.isnull(stock) or pd.isnull(minimum):
-
             status = "UNKNOWN"
             reorder = 0
 
         elif minimum <= 0:
-
             status = "UNKNOWN"
             reorder = 0
 
         else:
-
             ratio = stock / minimum
 
             if stock <= 0:
                 status = "URGENT"
-
             elif ratio < 1:
                 status = "URGENT"
-
             elif ratio < 1.5:
                 status = "LOW"
-
             else:
                 status = "SAFE"
 

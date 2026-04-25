@@ -38,6 +38,7 @@ Data Analysis: Identifying stock shortages and surpluses.
 Information Retrieval: Finding specific SKUs or item details.
 Error Detection: Spotting missing values in your CSV.
 Data Modification: Updating missing or incorrect inventory values when the user requests a correction.
+When updating inventory data, use the data modification tool with a single instruction like: set row 0 supplier to FreshCo.
 General Support: Answering questions regarding the uploaded manifest.
 """
 
@@ -58,7 +59,8 @@ class InventoryAgent:
             agent=self.agent, 
             tools=self.tools, 
             verbose=True, 
-            handle_parsing_errors=True
+            handle_parsing_errors=True,
+            return_intermediate_steps=True
         )
 
     def get_session_history(self, session_id: str):
@@ -99,8 +101,14 @@ class InventoryAgent:
     
         # Execute and Save the result to the database
         result = self.executor.invoke({"input": full_input})
-        
+
         history.add_user_message(user_input)
-        history.add_ai_message(result["output"])
-        
-        return result["output"]
+
+        output_text = result["output"]
+        if not isinstance(output_text, str):
+            output_text = str(output_text)
+
+        history.add_ai_message(output_text)
+        result["output"] = output_text
+
+        return result
