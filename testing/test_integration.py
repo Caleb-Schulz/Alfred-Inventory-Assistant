@@ -7,7 +7,7 @@ def test_full_pipeline():
 
     json_data = df.to_json(orient="records")
 
-    result = inventory_restock_tool(json_data)
+    result = inventory_restock_tool.invoke(json_data)
 
     assert result["unit"] == "inventory_status"
     assert "urgent" in result["detail"]

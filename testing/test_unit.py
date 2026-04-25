@@ -11,7 +11,7 @@ def test_basic_restock_logic():
 
     json_data = df.to_json(orient="records")
 
-    result = inventory_restock_tool(json_data)
+    result = inventory_restock_tool.invoke(json_data)
 
     assert result["unit"] == "inventory_status"
     assert result["detail"]["urgent"] >= 1
@@ -26,7 +26,7 @@ def test_unknown_values():
 
     json_data = df.to_json(orient="records")
 
-    result = inventory_restock_tool(json_data)
+    result = inventory_restock_tool.invoke(json_data)
 
     assert result["detail"]["unknown"] == 1
 
@@ -39,7 +39,7 @@ def test_invalid_input():
     json_data = df.to_json(orient="records")
 
     with pytest.raises(ValueError):
-        inventory_restock_tool(json_data)
+        inventory_restock_tool.invoke(json_data)
 
 # to run all test
 # pytest
