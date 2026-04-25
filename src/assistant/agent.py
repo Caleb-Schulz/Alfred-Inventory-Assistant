@@ -1,3 +1,4 @@
+# agent.py
 import os
 import streamlit as st
 from dotenv import load_dotenv
@@ -36,6 +37,7 @@ Your goal is to assist in the precision management of inventory through determin
 Data Analysis: Identifying stock shortages and surpluses.
 Information Retrieval: Finding specific SKUs or item details.
 Error Detection: Spotting missing values in your CSV.
+Data Modification: Updating missing or incorrect inventory values when the user requests a correction.
 General Support: Answering questions regarding the uploaded manifest.
 """
 
@@ -58,6 +60,7 @@ class InventoryAgent:
             verbose=True, 
             handle_parsing_errors=True
         )
+
     def get_session_history(self, session_id: str):
         # This creates a local database file (memory.db) to store chat logs.
         return SQLChatMessageHistory(
@@ -65,7 +68,7 @@ class InventoryAgent:
             connection_string="sqlite:///data/memory.db"
         )
 
-    def run(self, user_input, inventory_context, user_name):
+    def run(self, user_input, inventory_context, inventory_json, user_name):
         # missing user name safty net
         if not user_name or user_name.strip() == "":
             user_name = "Guest_User"
@@ -77,6 +80,10 @@ class InventoryAgent:
         # Check if context exists
         if not inventory_context:
             inventory_context = "No inventory file has been uploaded yet. Please ask the user to upload a CSV."
+
+        # Check if inventory JSON exists
+        if not inventory_json:
+            inventory_json = "[]"
         
         #It will only remember the last 10 lines
         formatted_history = "\n".join([f"{msg.type}: {msg.content}" for msg in chat_history[-10:]])
@@ -86,6 +93,7 @@ class InventoryAgent:
             f"{self.system_prompt}\n\n"
             f"PREVIOUS CONVERSATION:\n{formatted_history}\n\n" 
             f"CURRENT INVENTORY:\n{inventory_context}\n\n"
+            f"INVENTORY JSON:\n{inventory_json}\n\n"
             f"USER REQUEST: {user_input}"
         )
     

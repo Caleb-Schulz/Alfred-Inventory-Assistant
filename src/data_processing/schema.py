@@ -1,3 +1,4 @@
+# schema.py
 # expected clean inventory columns used by the app
 REQUIRED_COLUMNS = [
     "item_name",

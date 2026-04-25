@@ -3,6 +3,7 @@ import streamlit as st
 from src.assistant.agent import InventoryAgent, SYSTEM_PROMPT
 from src.tools.inventory_restock_tool import inventory_restock_tool
 from src.data_processing.parser import read_inventory_csv
+from src.data_modification.data_modify import add_data_to_column
 
 st.set_page_config(page_title="Alfred Inventory System", layout="wide")
 
@@ -11,6 +12,12 @@ if "user_name" not in st.session_state:
     st.session_state.user_name = ""
 if "messages" not in st.session_state:
     st.session_state.messages = []
+
+# Initialize dfs
+if "original_df" not in st.session_state:
+    st.session_state.original_df = None
+if "current_df" not in st.session_state:
+    st.session_state.current_df = None
 
 # --- Authentication ---
 if not st.session_state.user_name:
@@ -22,16 +29,19 @@ if not st.session_state.user_name:
                 st.session_state.user_name = name_input
 
                 st.session_state.agent_executor = InventoryAgent(
-                    tools=[inventory_restock_tool],
+                    tools=[inventory_restock_tool, add_data_to_column],
                     system_prompt=SYSTEM_PROMPT
                 )
 
+                # Load history
                 history = st.session_state.agent_executor.get_session_history(name_input)
                 if len(history.messages) > 0:
+                    # Convert SQL history to Streamlit format
                     st.session_state.messages = [
                         {"role": "user" if msg.type == "human" else "assistant", "content": msg.content}
                         for msg in history.messages
                     ]
+                    # Add a Welcome back alert
                     st.session_state.messages.append({
                         "role": "assistant",
                         "content": f"Welcome back, {name_input}. Just upload your CSV file and we can get started."
@@ -46,12 +56,6 @@ if not st.session_state.user_name:
     st.stop()
 
 # --- Main Dashboard ---
-
-# Initialize dfs
-if "original_df" not in st.session_state:
-    st.session_state.original_df = None
-if "current_df" not in st.session_state:
-    st.session_state.current_df = None
 
 # CSV Uploader
 uploaded_file = st.file_uploader("Upload Inventory CSV", type="csv")
@@ -91,7 +95,7 @@ if uploaded_file:
 
     # --- EXPORT SECTION ---
     # Convert dataframe to CSV for downloading
-    csv_data = st.session_state.current_df.to_csv(index=False).encode('utf-8')
+    csv_data = st.session_state.current_df.to_csv(index=False).encode("utf-8")
     
     btn = st.download_button(
         label="Export Current Inventory to CSV",
@@ -102,7 +106,7 @@ if uploaded_file:
 
     # send export massage
     if btn:
-        export_msg = f"Export successful, Thank you for using Alfred inventory assistant. Let me know if there is anything else I can help you with."
+        export_msg = "Export successful, Thank you for using Alfred inventory assistant. Let me know if there is anything else I can help you with."
         st.session_state.messages.append({"role": "assistant", "content": export_msg})
         st.rerun()
 
@@ -110,23 +114,29 @@ if uploaded_file:
 with st.sidebar:
     st.title(f"{st.session_state.user_name}")
     if st.button("Log Out"):
+        # Clear everything on logout
         for key in list(st.session_state.keys()):
             del st.session_state[key]
         st.rerun()
 
     st.subheader("Alfred Assistant")
+
+    # Chat box
     chat_container = st.container(height=500)
 
+    # Display Chat History
     for msg in st.session_state.messages:
         with chat_container.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
+    # Text box
     if prompt := st.chat_input("Ask Alfred..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with chat_container.chat_message("user"):
             st.markdown(prompt)
 
         with chat_container.chat_message("assistant"):
+            # /help intercepter
             if prompt.lower().strip() == "/help":
                 response = (
                     "I am Alfred, an AI here to assist with your inventory logistics. My current capabilities include:\n"
@@ -134,9 +144,11 @@ with st.sidebar:
                     "* **Information Retrieval:** Finding specific SKUs or item details.\n"
                     "* **Error Detection:** Spotting missing values in your CSV.\n"
                     "* **Restock Analysis:** Flags SAFE, LOW, URGENT, and UNKNOWN items and calculates reorder quantities.\n"
+                    "* **Data Modification:** Updates missing or incorrect inventory values when requested.\n"
                     "* **General Support:** Answering questions regarding the uploaded manifest."
                 )
                 st.markdown(response)
+            # normal processing
             else:
                 response = st.session_state.agent_executor.run(
                     user_input=prompt,
@@ -147,3 +159,9 @@ with st.sidebar:
                 st.markdown(response)
 
         st.session_state.messages.append({"role": "assistant", "content": response})
+
+
+# to run
+# add .env with you API key
+# pip install -r requirements.txt
+# python3 -m streamlit run app.py

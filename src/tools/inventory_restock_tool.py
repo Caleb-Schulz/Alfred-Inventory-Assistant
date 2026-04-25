@@ -1,3 +1,4 @@
+# inventory_restock_tool.py
 from langchain.tools import tool
 import pandas as pd
 
@@ -45,9 +46,14 @@ def inventory_restock_tool(inventory_json: str, sort_by: str = None) -> dict:
             status = "UNKNOWN"
             reorder = 0
 
+        elif minimum <= 0:
+
+            status = "UNKNOWN"
+            reorder = 0
+
         else:
 
-            ratio = stock / minimum if minimum != 0 else 0
+            ratio = stock / minimum
 
             if stock <= 0:
                 status = "URGENT"
@@ -75,7 +81,8 @@ def inventory_restock_tool(inventory_json: str, sort_by: str = None) -> dict:
     summary = {
         "urgent": int((df["status"] == "URGENT").sum()),
         "low": int((df["status"] == "LOW").sum()),
-        "safe": int((df["status"] == "SAFE").sum())
+        "safe": int((df["status"] == "SAFE").sum()),
+        "unknown": int((df["status"] == "UNKNOWN").sum())
     }
 
     return {
