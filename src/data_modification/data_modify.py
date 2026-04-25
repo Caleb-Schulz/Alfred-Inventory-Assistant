@@ -37,6 +37,20 @@ def add_data_to_column(instruction: str) -> dict:
     new_value = new_value.strip('"').strip("'")
     new_value = new_value.rstrip("]}").strip()
 
+    # fix review check mark
+    if new_value.lower() == "true":
+        new_value = True
+    elif new_value.lower() == "false":
+        new_value = False
+    else:
+        try:
+            if "." in new_value:
+                new_value = float(new_value)
+            else:
+                new_value = int(new_value)
+        except ValueError:
+            pass 
+
     if column_name not in df.columns:
         raise ValueError(f"Column '{column_name}' does not exist in the DataFrame.")
 
@@ -44,6 +58,12 @@ def add_data_to_column(instruction: str) -> dict:
         raise ValueError("Row index is out of range.")
 
     df.at[row_index, column_name] = new_value
+
+    # auto checks review
+    if column_name in ['current_stock', 'min_stock', 'supplier']:
+        row = df.iloc[row_index]
+        if pd.notnull(row['current_stock']) and pd.notnull(row['min_stock']) and row['supplier'] != 'unknown':
+            df.at[row_index, 'needs_review'] = False
 
     return {
         "result": df.to_json(orient="records"),

@@ -27,6 +27,8 @@ Your goal is to assist in the precision management of inventory through determin
 2. Contextual Awareness: You have access to a live inventory dataframe. Always reference current stock levels before suggesting actions.
 3. Concise Communication: Keep answers concise (2-4 sentences) unless a detailed report or data table is requested.
 4. Professional Tone: Maintain a grounded, expert-level demeanor suitable for an enterprise environment.
+5. Tool Necessity: Only use a tool if the user request requires a calculation or a data modification that you cannot perform by reading the provided CSV text.
+6. Immediately provide your response using the 'Final Answer:' prefix.
 
 == MEMORY & DATA PERSISTENCE ==
 1. Historical Context: You must remember previous user instructions (e.g., if the user previously asked to "flag shortages," maintain that context in the current turn).
@@ -37,6 +39,7 @@ Your goal is to assist in the precision management of inventory through determin
 Data Analysis: Identifying stock shortages and surpluses.
 Information Retrieval: Finding specific SKUs or item details.
 Error Detection: Spotting missing values in your CSV.
+Restock Analysis: Flags SAFE, LOW, URGENT, and UNKNOWN items and calculates reorder quantities.
 Data Modification: Updating missing or incorrect inventory values when the user requests a correction.
 When updating inventory data, use the data modification tool with a single instruction like: set row 0 supplier to FreshCo.
 General Support: Answering questions regarding the uploaded manifest.
@@ -51,7 +54,14 @@ class InventoryAgent:
         )
         self.tools = tools
         self.system_prompt = system_prompt
-        self.prompt = hub.pull("hwchase17/react")
+        
+        base_prompt = hub.pull("hwchase17/react")
+
+        # adds system prompt to initializeion
+        custom_template = f"{self.system_prompt}\n\n" + base_prompt.template
+        base_prompt.template = custom_template
+        
+        self.prompt = base_prompt
         
         # Initialize the agent
         self.agent = create_react_agent(self.llm, self.tools, self.prompt)
@@ -60,6 +70,8 @@ class InventoryAgent:
             tools=self.tools, 
             verbose=True, 
             handle_parsing_errors=True,
+            max_iterations=3,           # STOP after 3 tries to prevent a loop
+            early_stopping_method="generate", # Try to generate a final answer even if stuck
             return_intermediate_steps=True
         )
 
@@ -92,10 +104,8 @@ class InventoryAgent:
 
         # Formats the input with the history and current data
         full_input = (
-            f"{self.system_prompt}\n\n"
             f"PREVIOUS CONVERSATION:\n{formatted_history}\n\n" 
-            f"CURRENT INVENTORY:\n{inventory_context}\n\n"
-            f"INVENTORY JSON:\n{inventory_json}\n\n"
+            f"FULL INVENTORY DATA (CSV Format):\n{inventory_context}\n\n"
             f"USER REQUEST: {user_input}"
         )
     

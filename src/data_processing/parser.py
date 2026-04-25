@@ -27,8 +27,10 @@ def read_inventory_csv(file_path: str):
     return df, summary
 
 # tests the parser with a sample csv
-if __name__ == "__main__":
-    df, summary = read_inventory_csv("data/sample_inventory_messy.csv")
-    print(df)
-    print("\nSummary:")
-    print(summary)
+# if __name__ == "__main__":
+    # df, summary = read_inventory_csv("data/sample_inventory_messy.csv")
+    # print(df)
+    # print("\nSummary:")
+    # print(summary)
+
+# I Caleb commented the summary out because it is redundant info
