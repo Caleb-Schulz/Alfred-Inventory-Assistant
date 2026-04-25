@@ -1,9 +1,10 @@
-import streamlit as st
+# app.py
 import pandas as pd
-import os
+import streamlit as st
 from src.assistant.agent import InventoryAgent, SYSTEM_PROMPT
-# from src.assistant.tools import tools_names and add them later
-
+from src.tools.inventory_restock_tool import inventory_restock_tool
+from src.data_processing.parser import read_inventory_csv
+from src.data_modification.data_modify import add_data_to_column
 
 st.set_page_config(page_title="Alfred Inventory System", layout="wide")
 
@@ -13,6 +14,12 @@ if "user_name" not in st.session_state:
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# Initialize dfs
+if "original_df" not in st.session_state:
+    st.session_state.original_df = None
+if "current_df" not in st.session_state:
+    st.session_state.current_df = None
+
 # --- Authentication ---
 if not st.session_state.user_name:
     st.title("Alfred System Authentication")
@@ -20,12 +27,13 @@ if not st.session_state.user_name:
         name_input = st.text_input("Employee ID / Name:")
         if st.form_submit_button("Access System"):
             if name_input:
-                # Store the name
                 st.session_state.user_name = name_input
-                
-                # agent initialization
-                st.session_state.agent_executor = InventoryAgent(tools = [], system_prompt=SYSTEM_PROMPT) # add tools names here
-                
+
+                st.session_state.agent_executor = InventoryAgent(
+                    tools=[inventory_restock_tool, add_data_to_column],
+                    system_prompt=SYSTEM_PROMPT
+                )
+
                 # Load history
                 history = st.session_state.agent_executor.get_session_history(name_input)
                 if len(history.messages) > 0:
@@ -35,41 +43,44 @@ if not st.session_state.user_name:
                         for msg in history.messages
                     ]
                     # Add a Welcome back alert
-                    st.session_state.messages.append({"role": "assistant", "content": f"Welcome back, {name_input}. Just upload your CSV file and we can get started."})
+                    st.session_state.messages.append({
+                        "role": "assistant",
+                        "content": f"Welcome back, {name_input}. Just upload your CSV file and we can get started."
+                    })
                 else:
-                    st.session_state.messages = [{"role": "assistant", "content": f"Hello {name_input}, I'm Alfred. I'll be assisting you with your inventory needs. To get started, go ahead and upload your CSV file."}]
-                
+                    st.session_state.messages = [{
+                        "role": "assistant",
+                        "content": f"Hello {name_input}, I'm Alfred. I'll be assisting you with your inventory needs. To get started, go ahead and upload your CSV file."
+                    }]
+
                 st.rerun()
     st.stop()
 
 # --- Main Dashboard ---
 
-# Initialize dfs
-if "original_df" not in st.session_state:
-    st.session_state.original_df = None
-if "current_df" not in st.session_state:
-    st.session_state.current_df = None
-
 # CSV Uploader
 uploaded_file = st.file_uploader("Upload Inventory CSV", type="csv")
-inventory_context = "No file uploaded" # Default
+inventory_context = "No file uploaded"
 
 if uploaded_file:
     # checks if new file
     is_new_file = st.session_state.get("last_uploaded") != uploaded_file.name
-    new_df = pd.read_csv(uploaded_file)
+    df, summary = read_inventory_csv(uploaded_file)
 
     if is_new_file:
-        st.session_state.original_df = new_df.copy()
-        st.session_state.current_df = new_df
+        st.session_state.original_df = df.copy()
+        st.session_state.current_df = df.copy()
         st.session_state.last_uploaded = uploaded_file.name
 
         # new file Upload Message
         upload_msg = f"Thank you for uploading '{uploaded_file.name}'. Let me know if you have any questions about the inventory. Type **/help** for a full list of my functionalities."
-        st.session_state.messages.append({"role": "assistant", "content": upload_msg})  
+        st.session_state.messages.append({"role": "assistant", "content": upload_msg})
+
+    # st.write("Summary:", summary)
 
     # allows agent to see table
-    inventory_context = st.session_state.current_df.head(50).to_string()
+    inventory_context = st.session_state.current_df.to_csv(index=False)
+    st.session_state.inventory_json = st.session_state.current_df.to_json(orient="records")
 
     # --- Display Tables ---
     
@@ -85,7 +96,7 @@ if uploaded_file:
 
     # --- EXPORT SECTION ---
     # Convert dataframe to CSV for downloading
-    csv_data = st.session_state.current_df.to_csv(index=False).encode('utf-8')
+    csv_data = st.session_state.current_df.to_csv(index=False).encode("utf-8")
     
     btn = st.download_button(
         label="Export Current Inventory to CSV",
@@ -96,7 +107,7 @@ if uploaded_file:
 
     # send export massage
     if btn:
-        export_msg = f"Export successful, Thank you for using Alfred inventory assistant. Let me know if there is anything else I can help you with."
+        export_msg = "Export successful, Thank you for using Alfred inventory assistant. Let me know if there is anything else I can help you with."
         st.session_state.messages.append({"role": "assistant", "content": export_msg})
         st.rerun()
 
@@ -108,9 +119,9 @@ with st.sidebar:
         for key in list(st.session_state.keys()):
             del st.session_state[key]
         st.rerun()
-    
+
     st.subheader("Alfred Assistant")
-    
+
     # Chat box
     chat_container = st.container(height=500)
 
@@ -133,24 +144,47 @@ with st.sidebar:
                     "* **Data Analysis:** Identifying stock shortages and surpluses.\n"
                     "* **Information Retrieval:** Finding specific SKUs or item details.\n"
                     "* **Error Detection:** Spotting missing values in your CSV.\n"
+                    "* **Restock Analysis:** Flags SAFE, LOW, URGENT, and UNKNOWN items and calculates reorder quantities.\n"
+                    "* **Data Modification:** Updates missing or incorrect inventory values when requested.\n"
                     "* **General Support:** Answering questions regarding the uploaded manifest."
-                    # add functionalities to system prompt
                 )
                 st.markdown(response)
             # normal processing
             else:
-                response = st.session_state.agent_executor.run(
-                    user_input=prompt, 
-                    inventory_context=inventory_context, 
-                    user_name=st.session_state.user_name
-                )
-                st.markdown(response)
+                try: 
+                    agent_result = st.session_state.agent_executor.run(
+                        user_input=prompt,
+                        inventory_context=inventory_context,
+                        inventory_json=st.session_state.get("inventory_json", "[]"),
+                        user_name=st.session_state.user_name
+                    )
+
+                    response = agent_result["output"]
+
+                    if "intermediate_steps" in agent_result:
+                        for step in agent_result["intermediate_steps"]:
+                            action, observation = step
+
+                            if isinstance(observation, dict) and observation.get("unit") == "inventory_update":
+                                updated_json = observation.get("result")
+
+                                if updated_json:
+                                    st.session_state.inventory_json = updated_json
+                                    st.session_state.current_df = pd.read_json(updated_json, orient="records")
+                                    inventory_context = st.session_state.current_df.head(50).to_string()
+                                    st.rerun()
+
+                    st.markdown(response)
+                except Exception as e:
+                    # 2. Handle the 429 Quota error gracefully
+                    if "429" in str(e) or "ResourceExhausted" in str(e):
+                        response = "**Rate Limit Reached:** I'm on the free tier and need a quick breather (about 60 seconds). Please try your request again in a moment!"
+                    else:
+                        response = f"I encountered an unexpected error: {str(e)}"
+                    
+                    st.error(response)
+
         st.session_state.messages.append({"role": "assistant", "content": response})
-
-
-
-
-
 
 
 # to run

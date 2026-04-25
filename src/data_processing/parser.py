@@ -1,8 +1,8 @@
 # parser.py
 import pandas as pd
-from cleaner import standardize_column_names, clean_missing_values, normalize_text_fields, remove_duplicates
-from validator import validate_required_columns, validate_numeric_columns, flag_negative_values
-from exporter import export_clean_inventory_csv
+from src.data_processing.cleaner import standardize_column_names, clean_missing_values, normalize_text_fields, remove_duplicates
+from src.data_processing.validator import validate_required_columns, validate_numeric_columns, flag_negative_values
+from src.data_processing.exporter import export_clean_inventory_csv
 
 # Reads the inventory csv file and returns it as a dataframe and summary
 def read_inventory_csv(file_path: str):
@@ -27,8 +27,10 @@ def read_inventory_csv(file_path: str):
     return df, summary
 
 # tests the parser with a sample csv
-if __name__ == "__main__":
-    df, summary = read_inventory_csv("data/sample_inventory_messy.csv")
-    print(df)
-    print("\nSummary:")
-    print(summary)
+# if __name__ == "__main__":
+    # df, summary = read_inventory_csv("data/sample_inventory_messy.csv")
+    # print(df)
+    # print("\nSummary:")
+    # print(summary)
+
+# I Caleb commented the summary out because it is redundant info

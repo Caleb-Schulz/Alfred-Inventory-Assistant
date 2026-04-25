@@ -1,3 +1,4 @@
+# agent.py
 import os
 import streamlit as st
 from dotenv import load_dotenv
@@ -26,6 +27,8 @@ Your goal is to assist in the precision management of inventory through determin
 2. Contextual Awareness: You have access to a live inventory dataframe. Always reference current stock levels before suggesting actions.
 3. Concise Communication: Keep answers concise (2-4 sentences) unless a detailed report or data table is requested.
 4. Professional Tone: Maintain a grounded, expert-level demeanor suitable for an enterprise environment.
+5. Tool Necessity: Only use a tool if the user request requires a calculation or a data modification that you cannot perform by reading the provided CSV text.
+6. Immediately provide your response using the 'Final Answer:' prefix.
 
 == MEMORY & DATA PERSISTENCE ==
 1. Historical Context: You must remember previous user instructions (e.g., if the user previously asked to "flag shortages," maintain that context in the current turn).
@@ -36,6 +39,9 @@ Your goal is to assist in the precision management of inventory through determin
 Data Analysis: Identifying stock shortages and surpluses.
 Information Retrieval: Finding specific SKUs or item details.
 Error Detection: Spotting missing values in your CSV.
+Restock Analysis: Flags SAFE, LOW, URGENT, and UNKNOWN items and calculates reorder quantities.
+Data Modification: Updating missing or incorrect inventory values when the user requests a correction.
+When updating inventory data, use the data modification tool with a single instruction like: set row 0 supplier to FreshCo.
 General Support: Answering questions regarding the uploaded manifest.
 """
 
@@ -44,11 +50,18 @@ class InventoryAgent:
         self.llm = ChatGoogleGenerativeAI(
             model="gemini-2.5-flash",
             temperature=0.1,  # Lower temperature for precision over probability 
-            google_api_key=os.getenv("GOOGLE_API_KEY")
+            google_api_key=api_key
         )
         self.tools = tools
         self.system_prompt = system_prompt
-        self.prompt = hub.pull("hwchase17/react")
+        
+        base_prompt = hub.pull("hwchase17/react")
+
+        # adds system prompt to initializeion
+        custom_template = f"{self.system_prompt}\n\n" + base_prompt.template
+        base_prompt.template = custom_template
+        
+        self.prompt = base_prompt
         
         # Initialize the agent
         self.agent = create_react_agent(self.llm, self.tools, self.prompt)
@@ -56,8 +69,12 @@ class InventoryAgent:
             agent=self.agent, 
             tools=self.tools, 
             verbose=True, 
-            handle_parsing_errors=True
+            handle_parsing_errors=True,
+            max_iterations=3,           # STOP after 3 tries to prevent a loop
+            early_stopping_method="generate", # Try to generate a final answer even if stuck
+            return_intermediate_steps=True
         )
+
     def get_session_history(self, session_id: str):
         # This creates a local database file (memory.db) to store chat logs.
         return SQLChatMessageHistory(
@@ -65,7 +82,7 @@ class InventoryAgent:
             connection_string="sqlite:///data/memory.db"
         )
 
-    def run(self, user_input, inventory_context, user_name):
+    def run(self, user_input, inventory_context, inventory_json, user_name):
         # missing user name safty net
         if not user_name or user_name.strip() == "":
             user_name = "Guest_User"
@@ -77,22 +94,31 @@ class InventoryAgent:
         # Check if context exists
         if not inventory_context:
             inventory_context = "No inventory file has been uploaded yet. Please ask the user to upload a CSV."
+
+        # Check if inventory JSON exists
+        if not inventory_json:
+            inventory_json = "[]"
         
         #It will only remember the last 10 lines
         formatted_history = "\n".join([f"{msg.type}: {msg.content}" for msg in chat_history[-10:]])
 
         # Formats the input with the history and current data
         full_input = (
-            f"{self.system_prompt}\n\n"
             f"PREVIOUS CONVERSATION:\n{formatted_history}\n\n" 
-            f"CURRENT INVENTORY:\n{inventory_context}\n\n"
+            f"FULL INVENTORY DATA (CSV Format):\n{inventory_context}\n\n"
             f"USER REQUEST: {user_input}"
         )
     
         # Execute and Save the result to the database
         result = self.executor.invoke({"input": full_input})
-        
+
         history.add_user_message(user_input)
-        history.add_ai_message(result["output"])
-        
-        return result["output"]
+
+        output_text = result["output"]
+        if not isinstance(output_text, str):
+            output_text = str(output_text)
+
+        history.add_ai_message(output_text)
+        result["output"] = output_text
+
+        return result
