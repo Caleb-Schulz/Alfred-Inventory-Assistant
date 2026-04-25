@@ -40,3 +40,6 @@ def test_invalid_input():
 
     with pytest.raises(ValueError):
         inventory_restock_tool(json_data)
+
+# to run all test
+# pytest

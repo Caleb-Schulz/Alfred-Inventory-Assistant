@@ -13,3 +13,6 @@ def test_load_multiple_requests():
     for _ in range(100):
         result = inventory_restock_tool(json_data)
         assert result["unit"] == "inventory_status"
+
+# to run all test
+# pytest

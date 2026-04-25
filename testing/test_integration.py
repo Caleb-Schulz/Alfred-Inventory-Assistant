@@ -12,3 +12,6 @@ def test_full_pipeline():
     assert result["unit"] == "inventory_status"
     assert "urgent" in result["detail"]
     assert "low" in result["detail"]
+
+    # to run all test
+    # pytest
