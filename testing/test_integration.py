@@ -1,4 +1,4 @@
-from src.data_processing.parser import read_inventory_csv
+from src.tools.data_processing.parser import read_inventory_csv
 from src.tools.inventory_restock_tool import inventory_restock_tool
 
 

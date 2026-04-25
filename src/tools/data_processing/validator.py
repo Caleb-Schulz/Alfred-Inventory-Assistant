@@ -1,6 +1,6 @@
 # validator.py
 import pandas as pd
-from src.data_processing.schema import REQUIRED_COLUMNS, NUMERIC_COLUMNS
+from src.tools.data_processing.schema import REQUIRED_COLUMNS, NUMERIC_COLUMNS
 
 # checks to see if all required columns are present
 def validate_required_columns(df: pd.DataFrame) -> None:
