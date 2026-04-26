@@ -33,8 +33,12 @@ def inventory_restock_tool(inventory_json: str = "", sort_by: str = None) -> dic
     except Exception:
         inventory_json = st.session_state.get("inventory_json", "[]")
 
-    df = pd.read_json(StringIO(inventory_json), orient="records")
+    # df = pd.read_json(StringIO(inventory_json), orient="records")
     
+    if isinstance(data, dict):
+        data = [data]
+    df = pd.DataFrame(data)
+
     df.columns = [col.lower().replace(" ", "_") for col in df.columns]
 
     required_cols = ["item_name", "current_stock", "min_stock"]
