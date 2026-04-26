@@ -3,8 +3,8 @@ import pandas as pd
 import streamlit as st
 from src.assistant.agent import InventoryAgent, SYSTEM_PROMPT
 from src.tools.inventory_restock_tool import inventory_restock_tool
-from src.data_processing.parser import read_inventory_csv
-from src.data_modification.data_modify import add_data_to_column
+from src.tools.data_processing.parser import read_inventory_csv
+from src.tools.data_modify import add_data_to_column
 
 st.set_page_config(page_title="Alfred Inventory System", layout="wide")
 

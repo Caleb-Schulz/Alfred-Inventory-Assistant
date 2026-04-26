@@ -15,3 +15,6 @@ streamlit>=1.32.0
 # Supporting Utilities
 pydantic>=2.0.0,<3.0.0
 python-dotenv>=1.0.0
+
+# Testing Suite
+pytest==9.0.2
