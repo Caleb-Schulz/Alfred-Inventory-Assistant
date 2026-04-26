@@ -33,7 +33,11 @@ def inventory_restock_tool(inventory_json: str = "", sort_by: str = None) -> dic
     except Exception:
         inventory_json = st.session_state.get("inventory_json", "[]")
 
-    df = pd.read_json(StringIO(inventory_json), orient="records")
+    # df = pd.read_json(StringIO(inventory_json), orient="records")
+    data = json.loads(inventory_json)
+    if isinstance(data, dict):
+        data = [data]
+    df = pd.DataFrame(data)
 
     required_cols = ["item_name", "current_stock", "min_stock"]
 
@@ -61,9 +65,9 @@ def inventory_restock_tool(inventory_json: str = "", sort_by: str = None) -> dic
         else:
             ratio = stock / minimum
 
-            if stock <= 0:
+            if stock <= 0.0:
                 status = "URGENT"
-            elif ratio < 1:
+            elif ratio < 1.0:
                 status = "URGENT"
             elif ratio < 1.5:
                 status = "LOW"
