@@ -43,16 +43,16 @@ def inventory_restock_tool(inventory_json: str = "", sort_by: str = None) -> dic
 
     df.columns = [col.lower().replace(" ", "_") for col in df.columns]
 
-    mapping = {
-        "stock": "current_stock",
-        "inventory": "current_stock",
-        "item": "item_name",
-        "min": "min_stock",
-        "minimum": "min_stock"
-    }
-    df = df.rename(columns=mapping)
-
     required_cols = ["item_name", "current_stock", "min_stock"]
+    
+    if not all(col in df.columns for col in required_cols):
+        # FALLBACK: If names don't match, map by index
+        new_names = {
+            df.columns[0]: "item_name",
+            df.columns[1]: "current_stock",
+            df.columns[2]: "min_stock"
+        }
+        df = df.rename(columns=new_names)
 
     if "stock" in df.columns and "current_stock" not in df.columns:
         df = df.rename(columns={"stock": "current_stock"})
