@@ -30,7 +30,7 @@ def inventory_restock_tool(inventory_json: str = "", sort_by: str = None) -> dic
         inventory_json = st.session_state.get("inventory_json", "[]")
 
     try:
-        json.loads(inventory_json)
+        data = json.loads(inventory_json)
     except Exception:
         fallback = st.session_state.get("inventory_json", "[]")
         data = json.loads(fallback)

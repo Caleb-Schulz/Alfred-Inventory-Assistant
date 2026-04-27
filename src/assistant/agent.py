@@ -66,8 +66,7 @@ class InventoryAgent:
             tools=self.tools, 
             verbose=True, 
             handle_parsing_errors=True,
-            max_iterations=3,           # STOP after 3 tries to prevent a loop
-            early_stopping_method="generate", # Try to generate a final answer even if stuck
+            max_iterations=5,           # STOP after 5 tries to prevent a loop
             return_intermediate_steps=True
         )
 
