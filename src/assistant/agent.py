@@ -39,6 +39,14 @@ Restock Analysis: Flags SAFE, LOW, URGENT, and UNKNOWN items and calculates reor
 Data Modification: Updating missing or incorrect inventory values when the user requests a correction.
 When updating inventory data, use the data modification tool with a single instruction like: set row 0 supplier to FreshCo.
 General Support: Answering questions regarding the uploaded manifest.
+
+== RESTOCKING GUIDELINES ==
+When a user asks about restocking:
+1. Run the inventory_restock_tool ONCE.
+2. Look at the 'detail' summary and the 'status' column in the result.
+3. Immediately summarize the findings for the user. 
+4. DO NOT call the tool multiple times for the same request.
+5. If the tool returns 'URGENT' or 'LOW' items, list them clearly.
 """
 
 class InventoryAgent:
