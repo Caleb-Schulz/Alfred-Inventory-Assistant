@@ -23,6 +23,7 @@ def inventory_restock_tool(inventory_json: str = "", sort_by: str = None) -> dic
     Returns:
         dict containing updated inventory + summary
     """
+    data = []
 
     # fallback to session state if tool input is missing or bad
     if not inventory_json or not str(inventory_json).strip():
@@ -31,7 +32,8 @@ def inventory_restock_tool(inventory_json: str = "", sort_by: str = None) -> dic
     try:
         json.loads(inventory_json)
     except Exception:
-        inventory_json = st.session_state.get("inventory_json", "[]")
+        fallback = st.session_state.get("inventory_json", "[]")
+        data = json.loads(fallback)
 
     # df = pd.read_json(StringIO(inventory_json), orient="records")
     
@@ -40,6 +42,9 @@ def inventory_restock_tool(inventory_json: str = "", sort_by: str = None) -> dic
     df = pd.DataFrame(data)
 
     df.columns = [col.lower().replace(" ", "_") for col in df.columns]
+
+    if "stock" in df.columns and "current_stock" not in df.columns:
+        df = df.rename(columns={"stock": "current_stock"})
 
     required_cols = ["item_name", "current_stock", "min_stock"]
 
